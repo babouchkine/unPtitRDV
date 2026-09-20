@@ -386,6 +386,11 @@ button {
 .nav-item {
     flex: 1;
 
+    position: relative;
+    z-index: 1;
+
+    transition: color 0.3s ease;
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -409,7 +414,6 @@ button {
 }
 
 .nav-item.active {
-    background: var(--accent-light);
     color: var(--accent);
 }
 
@@ -855,4 +859,43 @@ textarea {
 
 .detail-description.is-empty {
     color: var(--muted);
+}
+
+
+/* ---------------- BARRE DU BAS : RECTANGLE QUI GLISSE ---------------- */
+
+/* --nav-index vaut 0, 1 ou 2 : il est changé par showPage() dans le JS. */
+
+.bottom-nav {
+    --nav-index: 0;
+}
+
+.nav-indicator {
+    position: absolute;
+
+    top: 8px;
+    bottom: 8px;
+    left: 8px;
+
+    /* largeur d'un onglet = (largeur de la barre - les 2 marges de 8px) / 3 */
+    width: calc((100% - 16px) / 3);
+
+    border-radius: 15px;
+    background: var(--accent-light);
+
+    /* 100% = sa propre largeur : chaque cran décale d'un onglet */
+    transform: translateX(calc(var(--nav-index) * 100%));
+
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .nav-indicator,
+    .nav-item {
+        transition: none;
+    }
+
 }

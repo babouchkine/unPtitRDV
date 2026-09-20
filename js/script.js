@@ -21,6 +21,8 @@ const viewAllButton = document.getElementById("viewAllButton");
 const pages = document.querySelectorAll(".page");
 const navItems = document.querySelectorAll(".nav-item");
 
+const bottomNav = document.querySelector(".bottom-nav");
+
 const notificationButton = document.getElementById("notificationButton");
 
 
@@ -224,6 +226,24 @@ function showPage(pageId) {
         );
 
     });
+
+
+    // Fait glisser le rectangle rose vers le bon onglet
+    // (0 = Accueil, 1 = RDV, 2 = Activité).
+
+    const activeIndex =
+        [...navItems].findIndex(
+            item => item.dataset.page === pageId
+        );
+
+    if (activeIndex >= 0) {
+
+        bottomNav.style.setProperty(
+            "--nav-index",
+            activeIndex
+        );
+
+    }
 
 
     window.scrollTo({
