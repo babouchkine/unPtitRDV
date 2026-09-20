@@ -37,6 +37,10 @@ const loginError = document.getElementById("loginError");
 
 const logoutButton = document.getElementById("logoutButton");
 
+// Prénom affiché en haut à gauche
+
+const userNameElement = document.getElementById("userName");
+
 
 // =====================================================
 // SUPABASE
@@ -1186,6 +1190,8 @@ async function startApp(user) {
 
     currentUserName = displayNameOf(user);
 
+    userNameElement.textContent = currentUserName;
+
 
     authScreen.hidden = true;
 
@@ -1226,6 +1232,8 @@ function stopApp() {
     currentUserId = null;
 
     currentUserName = "";
+
+    userNameElement.textContent = "";
 
 
     renderAppointments();
