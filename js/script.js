@@ -1126,6 +1126,79 @@ function escapeHTML(text) {
 
 
 // =====================================================
+// PETITE PHRASE DU HAUT
+// =====================================================
+
+// Une phrase au hasard à chaque ouverture de l'app.
+//
+// Pour en ajouter : écris-la entre guillemets, suivie d'une virgule.
+// Pour en enlever : supprime simplement la ligne.
+// (Reste court : c'est un tout petit texte, ~30 caractères maximum.)
+
+const greetings = [
+
+    "Un prochain rdv ?",
+    "Je t'aume",
+    "Je t'aume fort 💗",
+    "Coucou toi 💕",
+    "On se voit quand ? 👀",
+    "Tu me manques 🥺",
+    "Une petite sortie ? ✨",
+    "Toi + moi = ❤️",
+    "Mon rayon de soleil ☀️",
+    "Bisous partout 😘",
+    "Je pense à toi 💭",
+    "Un câlin ? 🤗",
+    "Mon cœur fait boum 💓",
+    "Tu es mon plus beau rdv 💘",
+    "Un petit resto ? 🍝",
+    "Cinéma ce soir ? 🍿",
+    "Une balade à deux ? 🌿",
+    "Tu fais quoi de beau ? 🌸",
+    "On est trop mignons 🥰",
+    "Coucou mon cœur 💞"
+
+];
+
+const greetingElement = document.getElementById("greeting");
+
+
+function showRandomGreeting() {
+
+    // On évite de retomber deux fois de suite sur la même phrase.
+
+    const stored =
+        localStorage.getItem("unPtitRDV_lastGreeting");
+
+    const lastIndex =
+        stored === null ? -1 : Number(stored);
+
+
+    let index;
+
+    do {
+
+        index = Math.floor(
+            Math.random() * greetings.length
+        );
+
+    } while (
+        greetings.length > 1 &&
+        index === lastIndex
+    );
+
+
+    localStorage.setItem(
+        "unPtitRDV_lastGreeting",
+        index
+    );
+
+    greetingElement.textContent = greetings[index];
+
+}
+
+
+// =====================================================
 // CONNEXION
 // =====================================================
 
@@ -1191,6 +1264,8 @@ async function startApp(user) {
     currentUserName = displayNameOf(user);
 
     userNameElement.textContent = currentUserName;
+
+    showRandomGreeting();
 
 
     authScreen.hidden = true;
