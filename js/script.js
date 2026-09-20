@@ -24,30 +24,163 @@ const navItems = document.querySelectorAll(".nav-item");
 const notificationButton = document.getElementById("notificationButton");
 
 
+// Connexion / déconnexion
+
+const appElement = document.getElementById("app");
+const authScreen = document.getElementById("authScreen");
+
+const loginForm = document.getElementById("loginForm");
+const emailInput = document.getElementById("emailInput");
+const passwordInput = document.getElementById("passwordInput");
+const loginButton = document.getElementById("loginButton");
+const loginError = document.getElementById("loginError");
+
+const logoutButton = document.getElementById("logoutButton");
+
+
+// =====================================================
+// SUPABASE
+// =====================================================
+
+// Ces deux valeurs sont publiques : la sécurité repose sur les
+// policies RLS côté Supabase.
+//
+// ⚠️ Utilise la clé « publishable » (ou « anon »).
+// Ne mets JAMAIS la clé « secret » / « service_role » ici.
+
+const SUPABASE_URL = "https://tuqeyfvggtateqqjqwbd.supabase.co";
+const SUPABASE_KEY = "sb_publishable_oyjYMgXgXSIZ169w6wGBKg_E_Dri91S";
+
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+
 // =====================================================
 // UTILISATEUR ACTUEL
 // =====================================================
 
-// Pour l'instant nous sommes en mode test.
-// Plus tard, cette valeur viendra du compte connecté.
+// Rempli après la connexion (voir startApp).
 
-const currentUser = "Sacha";
+let currentUserId = null;
+
+let currentUserName = "";
 
 
 // =====================================================
 // DONNÉES
 // =====================================================
 
-let appointments =
-    JSON.parse(
-        localStorage.getItem("unPtitRDV_appointments")
-    ) || [];
+// Les données vivent maintenant dans Supabase.
+// Ces variables sont juste une copie locale pour l'affichage.
+
+let appointments = [];
+
+let activities = [];
+
+let realtimeChannel = null;
+
+let appStarted = false;
 
 
-let activities =
-    JSON.parse(
-        localStorage.getItem("unPtitRDV_activities")
-    ) || [];
+function showError(message) {
+
+    alert(message);
+
+}
+
+
+async function loadAppointments() {
+
+    const { data, error } =
+        await db
+            .from("appointments")
+            .select("*")
+            .order("date")
+            .order("time");
+
+
+    if (error) {
+
+        console.error(error);
+
+        showError(
+            "Impossible de charger les rendez-vous."
+        );
+
+        return;
+
+    }
+
+
+    appointments = data;
+
+    renderAppointments();
+
+}
+
+
+async function loadActivities() {
+
+    const { data, error } =
+        await db
+            .from("activities")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(50);
+
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+
+    }
+
+
+    // On garde le même format qu'avant pour l'affichage.
+
+    activities = data.map(row => ({
+
+        id: row.id,
+
+        type: row.type,
+
+        user: row.user_name,
+
+        appointmentTitle: row.appointment_title,
+
+        createdBy: row.created_by,
+
+        createdAt: new Date(row.created_at).getTime()
+
+    }));
+
+
+    // Si on est déjà sur la page Activité,
+    // les nouveautés sont lues immédiatement.
+
+    if (
+        document
+            .getElementById("notificationsPage")
+            .classList.contains("active")
+    ) {
+
+        localStorage.setItem(
+            "unPtitRDV_lastActivityVisit",
+            Date.now()
+        );
+
+    }
+
+
+    renderActivities();
+
+    updateNotificationBadge();
+
+}
 
 
 // =====================================================
@@ -179,48 +312,64 @@ modalOverlay.addEventListener(
 
 appointmentForm.addEventListener(
     "submit",
-    event => {
+    async event => {
 
         event.preventDefault();
 
 
-        const appointment = {
+        const submitButton =
+            appointmentForm.querySelector(
+                ".submit-button"
+            );
 
-            id: Date.now(),
-
-            title: titleInput.value.trim(),
-
-            date: dateInput.value,
-
-            time: timeInput.value,
-
-            description:
-                descriptionInput.value.trim(),
-
-            createdBy: currentUser,
-
-            createdAt: Date.now()
-
-        };
+        submitButton.disabled = true;
 
 
-        appointments.push(appointment);
+        // created_by et created_at sont remplis
+        // automatiquement par la base de données.
+
+        const { data, error } =
+            await db
+                .from("appointments")
+                .insert({
+
+                    title: titleInput.value.trim(),
+
+                    date: dateInput.value,
+
+                    time: timeInput.value,
+
+                    description:
+                        descriptionInput.value.trim()
+
+                })
+                .select()
+                .single();
 
 
-        saveAppointments();
+        submitButton.disabled = false;
+
+
+        if (error) {
+
+            console.error(error);
+
+            showError(
+                "Le rendez-vous n'a pas pu être ajouté."
+            );
+
+            return;
+
+        }
 
 
         // Créer automatiquement une activité.
 
-        addActivity({
+        await addActivity({
 
             type: "appointment_created",
 
-            user: currentUser,
-
-            appointmentTitle: appointment.title,
-
-            appointmentId: appointment.id
+            appointmentTitle: data.title
 
         });
 
@@ -229,11 +378,10 @@ appointmentForm.addEventListener(
 
         closeAppointmentModal();
 
-        renderAppointments();
-
-        renderActivities();
-
-        updateNotificationBadge();
+        await Promise.all([
+            loadAppointments(),
+            loadActivities()
+        ]);
 
         showPage("appointmentsPage");
 
@@ -242,26 +390,10 @@ appointmentForm.addEventListener(
 
 
 // =====================================================
-// SAUVEGARDE
-// =====================================================
-
-function saveAppointments() {
-
-    localStorage.setItem(
-
-        "unPtitRDV_appointments",
-
-        JSON.stringify(appointments)
-
-    );
-
-}
-
-// =====================================================
 // SUPPRESSION D'UN RENDEZ-VOUS
 // =====================================================
 
-function deleteAppointment(appointmentId) {
+async function deleteAppointment(appointmentId) {
 
     const appointment = appointments.find(
         appointment => appointment.id === appointmentId
@@ -282,38 +414,43 @@ function deleteAppointment(appointmentId) {
     }
 
 
-    // Supprimer le rendez-vous
+    // .select() renvoie les lignes réellement supprimées :
+    // si la liste est vide, c'est qu'une policy a refusé.
 
-    appointments = appointments.filter(
-        appointment => appointment.id !== appointmentId
-    );
+    const { data, error } =
+        await db
+            .from("appointments")
+            .delete()
+            .eq("id", appointmentId)
+            .select();
 
 
-    saveAppointments();
+    if (error || !data || data.length === 0) {
+
+        console.error(error);
+
+        showError(
+            "Le rendez-vous n'a pas pu être supprimé."
+        );
+
+        return;
+
+    }
 
 
-    // Ajouter une activité
-
-    addActivity({
+    await addActivity({
 
         type: "appointment_deleted",
 
-        user: currentUser,
-
-        appointmentTitle: appointment.title,
-
-        appointmentId: appointment.id
+        appointmentTitle: appointment.title
 
     });
 
 
-    // Actualiser l'affichage
-
-    renderAppointments();
-
-    renderActivities();
-
-    updateNotificationBadge();
+    await Promise.all([
+        loadAppointments(),
+        loadActivities()
+    ]);
 
 }
 
@@ -322,29 +459,30 @@ function deleteAppointment(appointmentId) {
 // ACTIVITÉS
 // =====================================================
 
-function addActivity(data) {
+async function addActivity({ type, appointmentTitle }) {
 
-    const activity = {
+    const { error } =
+        await db
+            .from("activities")
+            .insert({
 
-        id: Date.now(),
+                type: type,
 
-        ...data,
+                user_name: currentUserName,
 
-        createdAt: Date.now()
+                appointment_title: appointmentTitle
 
-    };
-
-
-    activities.unshift(activity);
+            });
 
 
-    localStorage.setItem(
+    if (error) {
 
-        "unPtitRDV_activities",
+        console.error(
+            "Activité non enregistrée :",
+            error
+        );
 
-        JSON.stringify(activities)
-
-    );
+    }
 
 }
 
@@ -502,10 +640,14 @@ function updateNotificationBadge() {
         ) || 0;
 
 
+    // Seules les actions de l'autre personne comptent :
+    // inutile d'être notifié de ce qu'on vient de faire soi-même.
+
     const hasNew =
         activities.some(
             activity =>
-                activity.createdAt > lastVisit
+                activity.createdAt > lastVisit &&
+                activity.createdBy !== currentUserId
         );
 
 
@@ -615,7 +757,7 @@ function renderAppointments() {
 
     nextDate.textContent =
         `${formatDate(first.date)}
-        à ${first.time}`;
+        à ${formatTime(first.time)}`;
 
 
     appointmentsList.innerHTML =
@@ -696,7 +838,7 @@ function createAppointmentCard(appointment) {
 
             <div class="appointment-time">
 
-                ${appointment.time}
+                ${formatTime(appointment.time)}
 
             </div>
 
@@ -810,6 +952,17 @@ function formatRelativeTime(timestamp) {
 }
 
 
+
+
+// La colonne SQL "time" renvoie « 19:30:00 » : on garde « 19:30 ».
+
+function formatTime(timeString) {
+
+    return timeString.slice(0, 5);
+
+}
+
+
 // =====================================================
 // SÉCURITÉ
 // =====================================================
@@ -828,12 +981,243 @@ function escapeHTML(text) {
 }
 
 
+
+
+// =====================================================
+// CONNEXION
+// =====================================================
+
+// Le prénom affiché vient du "display_name" du compte Supabase.
+// À défaut, on utilise le début de l'adresse email.
+
+function displayNameOf(user) {
+
+    const name = user.user_metadata?.display_name;
+
+    if (name) {
+        return name;
+    }
+
+    const local = user.email.split("@")[0];
+
+    return local.charAt(0).toUpperCase() + local.slice(1);
+
+}
+
+
+function showLogin() {
+
+    appElement.hidden = true;
+
+    authScreen.hidden = false;
+
+    passwordInput.value = "";
+
+}
+
+
+async function startApp(user) {
+
+    if (appStarted) {
+        return;
+    }
+
+    appStarted = true;
+
+
+    currentUserId = user.id;
+
+    currentUserName = displayNameOf(user);
+
+
+    authScreen.hidden = true;
+
+    appElement.hidden = false;
+
+
+    await Promise.all([
+        loadAppointments(),
+        loadActivities()
+    ]);
+
+
+    subscribeToChanges();
+
+}
+
+
+function stopApp() {
+
+    appStarted = false;
+
+
+    if (realtimeChannel) {
+
+        db.removeChannel(realtimeChannel);
+
+        realtimeChannel = null;
+
+    }
+
+
+    appointments = [];
+
+    activities = [];
+
+    currentUserId = null;
+
+    currentUserName = "";
+
+
+    renderAppointments();
+
+    renderActivities();
+
+    updateNotificationBadge();
+
+    showPage("homePage");
+
+    showLogin();
+
+}
+
+
+loginForm.addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+        loginError.textContent = "";
+
+        loginButton.disabled = true;
+
+
+        const { data, error } =
+            await db.auth.signInWithPassword({
+
+                email: emailInput.value.trim(),
+
+                password: passwordInput.value
+
+            });
+
+
+        loginButton.disabled = false;
+
+
+        if (error) {
+
+            loginError.textContent =
+                "Email ou mot de passe incorrect.";
+
+            return;
+
+        }
+
+
+        await startApp(data.user);
+
+    }
+);
+
+
+logoutButton.addEventListener(
+    "click",
+    async () => {
+
+        await db.auth.signOut();
+
+    }
+);
+
+
+// Se déclenche aussi si la session expire.
+
+db.auth.onAuthStateChange(
+    event => {
+
+        if (event === "SIGNED_OUT") {
+
+            stopApp();
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// TEMPS RÉEL
+// =====================================================
+
+// Dès que l'autre personne ajoute ou supprime quelque chose,
+// on recharge automatiquement.
+
+function subscribeToChanges() {
+
+    realtimeChannel =
+        db
+            .channel("unptitrdv")
+
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "appointments"
+                },
+                () => loadAppointments()
+            )
+
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "activities"
+                },
+                () => loadActivities()
+            )
+
+            .subscribe();
+
+}
+
+
 // =====================================================
 // INITIALISATION
 // =====================================================
 
-renderAppointments();
+async function init() {
 
-renderActivities();
+    if (SUPABASE_KEY.startsWith("COLLE_ICI")) {
 
-updateNotificationBadge();
+        showLogin();
+
+        loginError.textContent =
+            "Clé Supabase manquante (js/script.js).";
+
+        return;
+
+    }
+
+
+    const { data: { session } } =
+        await db.auth.getSession();
+
+
+    if (session) {
+
+        await startApp(session.user);
+
+    } else {
+
+        showLogin();
+
+    }
+
+}
+
+
+init();

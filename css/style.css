@@ -715,3 +715,66 @@ textarea {
     opacity: 1;
     transform: scale(1.1);
 }
+
+/* ---------------- CONNEXION ---------------- */
+
+.auth-screen {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px 18px;
+}
+
+.auth-screen[hidden],
+.app[hidden] {
+    display: none;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 380px;
+
+    padding: 34px 26px 28px;
+
+    border-radius: 28px;
+
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.auth-emoji {
+    font-size: 34px;
+}
+
+.auth-card h1 {
+    font-size: 27px;
+    letter-spacing: -0.04em;
+}
+
+.auth-subtitle {
+    margin-top: 6px;
+
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.auth-error {
+    min-height: 18px;
+
+    color: #d63050;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.topbar-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.submit-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}

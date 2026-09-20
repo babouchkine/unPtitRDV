@@ -13,7 +13,50 @@
 
 <body>
 
-    <div class="app">
+    <!-- Écran de connexion -->
+    <div class="auth-screen" id="authScreen" hidden>
+
+        <form class="auth-card" id="loginForm">
+
+            <div class="auth-emoji">❤️</div>
+
+            <div>
+                <h1>unPtitRDV</h1>
+                <p class="auth-subtitle">Connecte-toi pour retrouver notre calendrier.</p>
+            </div>
+
+            <label>
+                Email
+                <input
+                    type="email"
+                    id="emailInput"
+                    autocomplete="email"
+                    required
+                >
+            </label>
+
+            <label>
+                Mot de passe
+                <input
+                    type="password"
+                    id="passwordInput"
+                    autocomplete="current-password"
+                    required
+                >
+            </label>
+
+            <p class="auth-error" id="loginError"></p>
+
+            <button class="submit-button" id="loginButton" type="submit">
+                Se connecter
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <div class="app" id="app" hidden>
 
         <!-- En-tête -->
         <header class="topbar">
@@ -22,10 +65,18 @@
                 <h1>Je t'aume ❤️</h1>
             </div>
 
-            <button class="icon-button" id="notificationButton" aria-label="Notifications">
-                🔔
-                <span class="notification-dot"></span>
-            </button>
+            <div class="topbar-actions">
+
+                <button class="icon-button" id="logoutButton" aria-label="Se déconnecter" title="Se déconnecter">
+                    🚪
+                </button>
+
+                <button class="icon-button" id="notificationButton" aria-label="Notifications">
+                    🔔
+                    <span class="notification-dot"></span>
+                </button>
+
+            </div>
         </header>
 
 
@@ -195,6 +246,7 @@
     </div>
 
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/script.js"></script>
 
 </body>
