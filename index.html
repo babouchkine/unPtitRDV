@@ -1,24 +1,208 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Notre petit monde ❤️</title>
+    <meta name="theme-color" content="#111111">
+
+    <title>unPtitRDV ❤️</title>
 
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-    <main>
-        <h1>Notre petit monde ❤️</h1>
+    <div class="app">
 
-        <p>Bienvenue sur notre espace.</p>
-    </main>
+        <!-- En-tête -->
+        <header class="topbar">
+            <div>
+                <p class="small-title">NOTRE PETIT MONDE</p>
+                <h1>Bonjour ❤️</h1>
+            </div>
 
-    <script src="js/app.js"></script>
+            <button class="icon-button" id="notificationButton" aria-label="Notifications">
+                🔔
+                <span class="notification-dot"></span>
+            </button>
+        </header>
+
+
+        <!-- Contenu principal -->
+        <main>
+
+            <!-- Accueil -->
+            <section id="homePage" class="page active">
+
+                <div class="welcome-card">
+                    <div>
+                        <span class="card-label">NOTRE PROCHAIN MOMENT</span>
+                        <h2 id="nextTitle">Aucun rendez-vous</h2>
+                        <p id="nextDate">Ajoutez votre premier rendez-vous ❤️</p>
+                    </div>
+
+                    <div class="heart">♥</div>
+                </div>
+
+
+                <div class="section-header">
+                    <div>
+                        <span class="eyebrow">À VENIR</span>
+                        <h2>Nos rendez-vous</h2>
+                    </div>
+
+                    <button class="text-button" id="viewAllButton">
+                        Voir tout
+                    </button>
+                </div>
+
+
+                <div id="appointmentsList" class="appointments-list">
+                    <div class="empty-state">
+                        <div class="empty-icon">📅</div>
+                        <h3>Rien de prévu pour le moment</h3>
+                        <p>Créez un rendez-vous pour commencer votre petit calendrier.</p>
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- Page rendez-vous -->
+            <section id="appointmentsPage" class="page">
+
+                <div class="page-heading">
+                    <span class="eyebrow">CALENDRIER</span>
+                    <h2>Nos rendez-vous</h2>
+                    <p>Tous vos petits moments au même endroit.</p>
+                </div>
+
+                <div id="allAppointmentsList" class="appointments-list"></div>
+
+            </section>
+
+
+            <!-- Page notifications -->
+            <section id="notificationsPage" class="page">
+
+                <div class="page-heading">
+                    <span class="eyebrow">ACTIVITÉ</span>
+                    <h2>Notifications</h2>
+                    <p>Les nouveautés de votre petit monde.</p>
+                </div>
+
+                <div class="notification-card">
+                    <div class="notification-icon">❤️</div>
+
+                    <div>
+                        <strong>Bienvenue !</strong>
+                        <p>Votre espace à deux est prêt.</p>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+
+
+        <!-- Bouton ajouter -->
+        <button class="add-button" id="addButton">
+            <span>+</span>
+            Nouveau rendez-vous
+        </button>
+
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+
+            <button class="nav-item active" data-page="homePage">
+                <span>⌂</span>
+                <small>Accueil</small>
+            </button>
+
+            <button class="nav-item" data-page="appointmentsPage">
+                <span>◷</span>
+                <small>RDV</small>
+            </button>
+
+            <button class="nav-item" data-page="notificationsPage">
+                <span>♡</span>
+                <small>Activité</small>
+            </button>
+
+        </nav>
+
+    </div>
+
+
+    <!-- Fenêtre d'ajout -->
+    <div class="modal hidden" id="appointmentModal">
+
+        <div class="modal-overlay" id="modalOverlay"></div>
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <div>
+                    <span class="eyebrow">NOUVEAU</span>
+                    <h2>Un nouveau moment ❤️</h2>
+                </div>
+
+                <button class="close-button" id="closeModal">×</button>
+            </div>
+
+
+            <form id="appointmentForm">
+
+                <label>
+                    Titre
+                    <input
+                        type="text"
+                        id="titleInput"
+                        placeholder="Ex : Cinéma, restaurant..."
+                        required
+                    >
+                </label>
+
+
+                <div class="form-row">
+
+                    <label>
+                        Date
+                        <input type="date" id="dateInput" required>
+                    </label>
+
+                    <label>
+                        Heure
+                        <input type="time" id="timeInput" required>
+                    </label>
+
+                </div>
+
+
+                <label>
+                    Description
+                    <textarea
+                        id="descriptionInput"
+                        placeholder="Un petit détail..."
+                        rows="3"
+                    ></textarea>
+                </label>
+
+
+                <button class="submit-button" type="submit">
+                    Ajouter le rendez-vous ❤️
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script src="js/script.js"></script>
 
 </body>
 </html>
