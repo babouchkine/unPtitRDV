@@ -21,6 +21,8 @@ const viewAllButton = document.getElementById("viewAllButton");
 const pages = document.querySelectorAll(".page");
 const navItems = document.querySelectorAll(".nav-item");
 
+const notificationButton = document.getElementById("notificationButton");
+
 
 // =====================================================
 // UTILISATEUR ACTUEL
@@ -104,6 +106,16 @@ navItems.forEach(item => {
         showPage(item.dataset.page);
 
     });
+
+});
+
+// =====================================================
+// BOUTON NOTIFICATIONS
+// =====================================================
+
+notificationButton.addEventListener("click", () => {
+
+    showPage("notificationsPage");
 
 });
 

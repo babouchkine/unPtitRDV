@@ -83,13 +83,19 @@ button {
 }
 
 .notification-dot {
+    display: none;
+
     position: absolute;
     width: 7px;
     height: 7px;
     border-radius: 50%;
     background: var(--accent);
-    top: 10px;
-    right: 10px;
+    top: 8px;
+    right: 8px;
+}
+
+.icon-button.has-notification .notification-dot {
+    display: block;
 }
 
 
