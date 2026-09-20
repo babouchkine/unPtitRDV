@@ -1157,8 +1157,8 @@ function escapeHTML(text) {
 
 const greetings = [
 
-    "Un prochain rdv ?",
-    "Je t'aume",
+    "Un prochain rdv ? 😏",
+    "Je t'aume 💋",
     "Je t'aume fort 💗",
     "Coucou toi 💕",
     "On se voit quand ? 👀",
