@@ -245,6 +245,66 @@ function saveAppointments() {
 
 }
 
+// =====================================================
+// SUPPRESSION D'UN RENDEZ-VOUS
+// =====================================================
+
+function deleteAppointment(appointmentId) {
+
+    const appointment = appointments.find(
+        appointment => appointment.id === appointmentId
+    );
+
+    if (!appointment) {
+        return;
+    }
+
+
+    const confirmed = confirm(
+        `Supprimer le rendez-vous « ${appointment.title} » ?`
+    );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    // Supprimer le rendez-vous
+
+    appointments = appointments.filter(
+        appointment => appointment.id !== appointmentId
+    );
+
+
+    saveAppointments();
+
+
+    // Ajouter une activité
+
+    addActivity({
+
+        type: "appointment_deleted",
+
+        user: currentUser,
+
+        appointmentTitle: appointment.title,
+
+        appointmentId: appointment.id
+
+    });
+
+
+    // Actualiser l'affichage
+
+    renderAppointments();
+
+    renderActivities();
+
+    updateNotificationBadge();
+
+}
+
 
 // =====================================================
 // ACTIVITÉS
@@ -348,6 +408,26 @@ function createActivityCard(activity) {
                 « ${escapeHTML(activity.appointmentTitle)} »
             </p>
         `;
+
+    }
+
+    if (
+    activity.type ===
+    "appointment_deleted"
+    ) {
+
+        icon = "🗑️";
+
+        text = `
+            <strong>
+               ${escapeHTML(activity.user)}
+                a supprimé un rendez-vous
+            </strong>
+
+            <p>
+                « ${escapeHTML(activity.appointmentTitle)} »
+            </p>
+    `;
 
     }
 
@@ -540,10 +620,7 @@ function renderAppointments() {
 
 }
 
-
-function createAppointmentCard(
-    appointment
-) {
+function createAppointmentCard(appointment) {
 
     const date =
         new Date(
@@ -611,12 +688,21 @@ function createAppointmentCard(
 
             </div>
 
+
+            <button
+                class="delete-appointment-button"
+                onclick="deleteAppointment(${appointment.id})"
+                aria-label="Supprimer le rendez-vous"
+                title="Supprimer"
+            >
+                🗑️
+            </button>
+
         </article>
 
     `;
 
 }
-
 
 // =====================================================
 // DATES

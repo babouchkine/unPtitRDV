@@ -694,3 +694,18 @@ textarea {
     top: 5px;
     right: 27px;
 }
+
+.delete-appointment-button {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    opacity: 0.6;
+    transition: 0.2s ease;
+}
+
+.delete-appointment-button:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
