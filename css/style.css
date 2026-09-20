@@ -609,3 +609,88 @@ textarea {
         bottom: 88px;
     }
 }
+
+/* ---------------- ACTIVITÉ ---------------- */
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.activity-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+
+    padding: 16px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 19px;
+}
+
+.activity-icon {
+    width: 43px;
+    height: 43px;
+    min-width: 43px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 14px;
+
+    background: var(--accent-light);
+}
+
+.activity-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.activity-content strong {
+    font-size: 13px;
+}
+
+.activity-content p {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.activity-time {
+    color: #aaa;
+    font-size: 10px;
+    margin-top: 3px;
+}
+
+
+/* Petit indicateur de nouveauté */
+
+.icon-button.has-notification::after,
+.nav-item.has-notification::after {
+    content: "";
+
+    position: absolute;
+
+    width: 7px;
+    height: 7px;
+
+    background: var(--accent);
+
+    border-radius: 50%;
+}
+
+.icon-button.has-notification::after {
+    top: 8px;
+    right: 8px;
+}
+
+.nav-item.has-notification {
+    position: relative;
+}
+
+.nav-item.has-notification::after {
+    top: 5px;
+    right: 27px;
+}
