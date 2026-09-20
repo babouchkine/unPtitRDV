@@ -778,3 +778,81 @@ textarea {
     opacity: 0.6;
     cursor: default;
 }
+
+
+/* ---------------- DÉTAIL D'UN RENDEZ-VOUS ---------------- */
+
+.appointment-card {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.appointment-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.appointment-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.detail-content {
+    max-height: 88vh;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-content .modal-header {
+    margin-bottom: 18px;
+}
+
+.detail-content .modal-header > div {
+    min-width: 0;
+    padding-right: 12px;
+}
+
+.detail-content .modal-header h2 {
+    overflow-wrap: anywhere;
+}
+
+.detail-content .close-button {
+    flex-shrink: 0;
+}
+
+.detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-bottom: 18px;
+}
+
+.detail-chip {
+    padding: 8px 14px;
+
+    border-radius: 999px;
+
+    background: var(--accent-light);
+    color: var(--accent);
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.detail-description {
+    overflow-y: auto;
+
+    /* garde les retours à la ligne écrits par l'utilisateur */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.detail-description.is-empty {
+    color: var(--muted);
+}

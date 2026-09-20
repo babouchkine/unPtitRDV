@@ -81,6 +81,10 @@ let activities = [];
 
 let realtimeChannel = null;
 
+// Rendez-vous actuellement ouvert dans la fenêtre de détail.
+
+let detailId = null;
+
 let appStarted = false;
 
 
@@ -115,6 +119,15 @@ async function loadAppointments() {
 
 
     appointments = data;
+
+    if (
+        detailId !== null &&
+        !appointments.some(a => a.id === detailId)
+    ) {
+
+        closeAppointmentDetail();
+
+    }
 
     renderAppointments();
 
@@ -303,6 +316,125 @@ closeModal.addEventListener(
 modalOverlay.addEventListener(
     "click",
     closeAppointmentModal
+);
+
+
+// =====================================================
+// DÉTAIL D'UN RENDEZ-VOUS
+// =====================================================
+
+const detailModal = document.getElementById("detailModal");
+const detailOverlay = document.getElementById("detailOverlay");
+const closeDetail = document.getElementById("closeDetail");
+
+const detailTitle = document.getElementById("detailTitle");
+const detailDate = document.getElementById("detailDate");
+const detailTime = document.getElementById("detailTime");
+const detailDescription = document.getElementById("detailDescription");
+
+
+function openAppointmentDetail(appointmentId) {
+
+    const appointment = appointments.find(
+        appointment => appointment.id === appointmentId
+    );
+
+    if (!appointment) {
+        return;
+    }
+
+
+    detailId = appointmentId;
+
+
+    const date = new Date(
+        `${appointment.date}T${appointment.time}`
+    );
+
+    const longDate = date.toLocaleDateString(
+        "fr-FR",
+        {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        }
+    );
+
+
+    // textContent : le texte est affiché tel quel, en entier.
+
+    detailTitle.textContent = appointment.title;
+
+    detailDate.textContent =
+        "📅 " +
+        longDate.charAt(0).toUpperCase() +
+        longDate.slice(1);
+
+    detailTime.textContent =
+        "🕐 " + formatTime(appointment.time);
+
+
+    const hasDescription = Boolean(appointment.description);
+
+    detailDescription.textContent =
+        hasDescription
+            ? appointment.description
+            : "Un petit moment à deux ❤️";
+
+    detailDescription.classList.toggle(
+        "is-empty",
+        !hasDescription
+    );
+
+    detailDescription.scrollTop = 0;
+
+
+    detailModal.classList.remove("hidden");
+
+    document.body.style.overflow = "hidden";
+
+}
+
+
+function closeAppointmentDetail() {
+
+    detailId = null;
+
+    detailModal.classList.add("hidden");
+
+    document.body.style.overflow = "";
+
+}
+
+
+closeDetail.addEventListener(
+    "click",
+    closeAppointmentDetail
+);
+
+
+detailOverlay.addEventListener(
+    "click",
+    closeAppointmentDetail
+);
+
+
+// La touche Échap ferme les fenêtres (ordinateur).
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Escape") {
+
+            closeAppointmentDetail();
+
+            closeAppointmentModal();
+
+        }
+
+    }
 );
 
 
@@ -803,7 +935,13 @@ function createAppointmentCard(appointment) {
 
     return `
 
-        <article class="appointment-card">
+        <article
+            class="appointment-card"
+            role="button"
+            tabindex="0"
+            onclick="openAppointmentDetail(${appointment.id})"
+            onkeydown="if (event.key === 'Enter' && event.target === this) openAppointmentDetail(${appointment.id})"
+        >
 
             <div class="appointment-date">
 
@@ -845,7 +983,7 @@ function createAppointmentCard(appointment) {
 
             <button
                 class="delete-appointment-button"
-                onclick="deleteAppointment(${appointment.id})"
+                onclick="event.stopPropagation(); deleteAppointment(${appointment.id})"
                 aria-label="Supprimer le rendez-vous"
                 title="Supprimer"
             >
@@ -1013,6 +1151,25 @@ function showLogin() {
 
     passwordInput.value = "";
 
+
+    // On se souvient de la dernière adresse utilisée :
+    // il ne reste alors que le mot de passe à taper.
+
+    const savedEmail =
+        localStorage.getItem("unPtitRDV_lastEmail");
+
+    if (savedEmail) {
+
+        emailInput.value = savedEmail;
+
+        passwordInput.focus();
+
+    } else {
+
+        emailInput.focus();
+
+    }
+
 }
 
 
@@ -1049,6 +1206,8 @@ async function startApp(user) {
 function stopApp() {
 
     appStarted = false;
+
+    closeAppointmentDetail();
 
 
     if (realtimeChannel) {
@@ -1115,6 +1274,11 @@ loginForm.addEventListener(
 
         }
 
+
+        localStorage.setItem(
+            "unPtitRDV_lastEmail",
+            emailInput.value.trim()
+        );
 
         await startApp(data.user);
 

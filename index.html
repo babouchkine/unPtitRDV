@@ -30,7 +30,8 @@
                 <input
                     type="email"
                     id="emailInput"
-                    autocomplete="email"
+                    name="email"
+                    autocomplete="username"
                     required
                 >
             </label>
@@ -40,6 +41,7 @@
                 <input
                     type="password"
                     id="passwordInput"
+                    name="password"
                     autocomplete="current-password"
                     required
                 >
@@ -240,6 +242,34 @@
                 </button>
 
             </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- Fenêtre de détail d'un rendez-vous -->
+    <div class="modal hidden" id="detailModal">
+
+        <div class="modal-overlay" id="detailOverlay"></div>
+
+        <div class="modal-content detail-content">
+
+            <div class="modal-header">
+                <div>
+                    <span class="eyebrow">RENDEZ-VOUS</span>
+                    <h2 id="detailTitle"></h2>
+                </div>
+
+                <button class="close-button" id="closeDetail" aria-label="Fermer">×</button>
+            </div>
+
+            <div class="detail-meta">
+                <span class="detail-chip" id="detailDate"></span>
+                <span class="detail-chip" id="detailTime"></span>
+            </div>
+
+            <p class="detail-description" id="detailDescription"></p>
 
         </div>
 
