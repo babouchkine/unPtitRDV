@@ -899,3 +899,82 @@ textarea {
     }
 
 }
+
+
+/* ---------------- NOTIFICATIONS SUR CET APPAREIL ---------------- */
+
+.push-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+
+    margin-bottom: 16px;
+    padding: 16px 18px;
+
+    border-radius: 20px;
+
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.push-card-text strong {
+    display: block;
+
+    font-size: 15px;
+}
+
+.push-card-text p {
+    margin-top: 3px;
+
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.push-toggle {
+    flex-shrink: 0;
+
+    padding: 10px 18px;
+
+    border-radius: 999px;
+    border: none;
+
+    background: var(--accent-light);
+    color: var(--accent);
+
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.push-toggle.is-on {
+    background: var(--accent);
+    color: #fff;
+}
+
+.push-toggle:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.push-test {
+    display: block;
+
+    width: 100%;
+
+    margin-bottom: 16px;
+    padding: 12px;
+
+    border-radius: 14px;
+    border: 1px dashed var(--border);
+
+    background: transparent;
+    color: var(--muted);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}

@@ -344,6 +344,364 @@ modalOverlay.addEventListener(
 
 
 // =====================================================
+// NOTIFICATIONS SUR CET APPAREIL
+// =====================================================
+
+// Clé publique : sans danger à écrire ici, elle sert seulement à
+// identifier notre app auprès du service de notification (comme une
+// adresse d'envoi). La clé privée, elle, ne quitte jamais le serveur.
+
+const VAPID_PUBLIC_KEY =
+    "BNmmlnaUGWPJXNbi_6RzzWi7gueHDFLmQlYBqBP4_No6GtSE-8-71e0Q2u0fJoIxm4-snajIX3OspNl9etnx_Nc";
+
+
+const pushCard = document.getElementById("pushCard");
+const pushTitle = document.getElementById("pushTitle");
+const pushStatus = document.getElementById("pushStatus");
+const pushToggle = document.getElementById("pushToggle");
+const pushTest = document.getElementById("pushTest");
+
+let swRegistration = null;
+
+
+function pushIsSupported() {
+
+    return (
+        "serviceWorker" in navigator &&
+        "PushManager" in window &&
+        "Notification" in window
+    );
+
+}
+
+
+// Sur iPhone/iPad, Safari n'autorise les notifications que si l'app a
+// été ajoutée à l'écran d'accueil (contrainte d'Apple, pas la nôtre).
+
+function isIOS() {
+
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+}
+
+function isStandalone() {
+
+    return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true
+    );
+
+}
+
+
+function urlBase64ToUint8Array(base64) {
+
+    const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+
+    const base64Safe =
+        (base64 + padding)
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+
+    const raw = atob(base64Safe);
+
+    return Uint8Array.from(
+        [...raw].map(char => char.charCodeAt(0))
+    );
+
+}
+
+
+async function registerServiceWorker() {
+
+    if (!pushIsSupported()) {
+        return null;
+    }
+
+    try {
+
+        swRegistration =
+            await navigator.serviceWorker.register("sw.js");
+
+        return swRegistration;
+
+    } catch (error) {
+
+        console.error(
+            "Service worker non installé :",
+            error
+        );
+
+        return null;
+
+    }
+
+}
+
+
+async function refreshPushUI() {
+
+    if (!pushCard) {
+        return;
+    }
+
+    if (!pushIsSupported()) {
+
+        pushCard.hidden = true;
+
+        pushTest.hidden = true;
+
+        return;
+
+    }
+
+    pushCard.hidden = false;
+
+
+    if (isIOS() && !isStandalone()) {
+
+        pushTitle.textContent = "Notifications 🔔";
+
+        pushStatus.textContent =
+            "Ajoute d'abord l'app à ton écran d'accueil " +
+            "(bouton Partager, puis « Sur l'écran d'accueil »).";
+
+        pushToggle.textContent = "Indisponible";
+
+        pushToggle.disabled = true;
+
+        pushTest.hidden = true;
+
+        return;
+
+    }
+
+
+    if (Notification.permission === "denied") {
+
+        pushTitle.textContent = "Notifications 🔕";
+
+        pushStatus.textContent =
+            "Bloquées dans les réglages de ce navigateur.";
+
+        pushToggle.textContent = "Bloquées";
+
+        pushToggle.disabled = true;
+
+        pushTest.hidden = true;
+
+        return;
+
+    }
+
+
+    pushToggle.disabled = false;
+
+    const subscription =
+        swRegistration &&
+        await swRegistration.pushManager.getSubscription();
+
+
+    if (subscription) {
+
+        pushTitle.textContent = "Notifications activées 🔔";
+
+        pushStatus.textContent =
+            "Tu recevras une alerte sur cet appareil.";
+
+        pushToggle.textContent = "Désactiver";
+
+        pushToggle.classList.add("is-on");
+
+        pushTest.hidden = false;
+
+    } else {
+
+        pushTitle.textContent = "Notifications";
+
+        pushStatus.textContent =
+            "Active-les pour être prévenu·e en direct sur cet appareil.";
+
+        pushToggle.textContent = "Activer";
+
+        pushToggle.classList.remove("is-on");
+
+        pushTest.hidden = true;
+
+    }
+
+}
+
+
+async function enablePush() {
+
+    pushToggle.disabled = true;
+
+
+    const registration =
+        swRegistration || await registerServiceWorker();
+
+    if (!registration) {
+
+        showError(
+            "Les notifications n'ont pas pu être activées."
+        );
+
+        await refreshPushUI();
+
+        return;
+
+    }
+
+
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+
+        await refreshPushUI();
+
+        return;
+
+    }
+
+
+    try {
+
+        const subscription =
+            await registration.pushManager.subscribe({
+
+                userVisibleOnly: true,
+
+                applicationServerKey:
+                    urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+
+            });
+
+        const json = subscription.toJSON();
+
+
+        // "upsert" : si cet appareil était déjà enregistré (par exemple
+        // pour l'autre personne, sur un appareil partagé), on le réattribue.
+
+        const { error } =
+            await db
+                .from("push_subscriptions")
+                .upsert(
+                    {
+
+                        user_id: currentUserId,
+
+                        endpoint: json.endpoint,
+
+                        p256dh: json.keys.p256dh,
+
+                        auth: json.keys.auth
+
+                    },
+                    { onConflict: "endpoint" }
+                );
+
+
+        if (error) {
+
+            console.error(error);
+
+            showError(
+                "L'appareil n'a pas pu être enregistré."
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        showError(
+            "Les notifications n'ont pas pu être activées."
+        );
+
+    }
+
+
+    await refreshPushUI();
+
+}
+
+
+async function disablePush() {
+
+    pushToggle.disabled = true;
+
+
+    if (swRegistration) {
+
+        const subscription =
+            await swRegistration.pushManager.getSubscription();
+
+        if (subscription) {
+
+            await db
+                .from("push_subscriptions")
+                .delete()
+                .eq("endpoint", subscription.endpoint);
+
+            await subscription.unsubscribe();
+
+        }
+
+    }
+
+
+    await refreshPushUI();
+
+}
+
+
+pushToggle?.addEventListener("click", () => {
+
+    if (pushToggle.classList.contains("is-on")) {
+
+        disablePush();
+
+    } else {
+
+        enablePush();
+
+    }
+
+});
+
+
+pushTest?.addEventListener("click", async () => {
+
+    pushTest.disabled = true;
+
+    pushTest.textContent = "Envoi en cours…";
+
+
+    const { error } =
+        await db.functions.invoke("test-push");
+
+
+    pushTest.disabled = false;
+
+    pushTest.textContent = "Envoyer une notification test";
+
+
+    if (error) {
+
+        console.error(error);
+
+        showError(
+            "Le test n'a pas pu être envoyé."
+        );
+
+    }
+
+});
+
+
+// =====================================================
 // DÉTAIL D'UN RENDEZ-VOUS
 // =====================================================
 
@@ -1157,8 +1515,8 @@ function escapeHTML(text) {
 
 const greetings = [
 
-    "Un prochain rdv ? 😏",
-    "Je t'aume 💋",
+    "Un prochain rdv ?",
+    "Je t'aume",
     "Je t'aume fort 💗",
     "Coucou toi 💕",
     "On se voit quand ? 👀",
@@ -1166,8 +1524,12 @@ const greetings = [
     "Une petite sortie ? ✨",
     "Toi + moi = ❤️",
     "Mon rayon de soleil ☀️",
+    "Bisous partout 😘",
     "Je pense à toi 💭",
     "Un câlin ? 🤗",
+    "Mon cœur fait boum 💓",
+    "Tu es mon plus beau rdv 💘",
+    "Un petit resto ? 🍝",
     "Cinéma ce soir ? 🍿",
     "Une balade à deux ? 🌿",
     "Tu fais quoi de beau ? 🌸",
@@ -1296,6 +1658,10 @@ async function startApp(user) {
 
 
     subscribeToChanges();
+
+    await registerServiceWorker();
+
+    await refreshPushUI();
 
 }
 

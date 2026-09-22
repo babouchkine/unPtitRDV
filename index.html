@@ -13,8 +13,9 @@
     <link rel="icon" href="favicon.ico?v=1" sizes="32x32">
     <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+    <link rel="manifest" href="manifest.json?v=1">
 
-    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 
 <body>
@@ -151,6 +152,22 @@
                     <p>Les nouveautés de notre petit monde.</p>
                 </div>
 
+                <!-- Notifications sur cet appareil -->
+                <div class="push-card" id="pushCard" hidden>
+
+                    <div class="push-card-text">
+                        <strong id="pushTitle">Notifications</strong>
+                        <p id="pushStatus">Vérification…</p>
+                    </div>
+
+                    <button class="push-toggle" id="pushToggle" type="button"></button>
+
+                </div>
+
+                <button class="push-test" id="pushTest" type="button" hidden>
+                    Envoyer une notification test
+                </button>
+
                 <div id="activityList" class="activity-list"></div>
 
             </section>
@@ -286,8 +303,7 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/script.js?v=5"></script>
-    <script src="js/cleanup-expired-appointments.js?v=1"></script>
+    <script src="js/script.js?v=6"></script>
 
 </body>
 </html>
