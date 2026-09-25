@@ -36,7 +36,7 @@ self.addEventListener("push", event => {
                 {
                     body: payload.body,
                     icon: "apple-touch-icon.png",
-                    badge: "favicon.svg",
+                    badge: "badge.png",
                     tag: "unptitrdv",
                     renotify: true
                 }
